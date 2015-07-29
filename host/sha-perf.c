@@ -319,7 +319,7 @@ static double mb_per_sec(size_t size, double usec)
 static void run_test(size_t size, unsigned int n, unsigned int l)
 {
 	uint64_t t;
-	struct statistics stats = {0, };
+	struct statistics stats;
 	TEEC_Operation op;
 	int n0 = n;
 
@@ -348,6 +348,7 @@ static void run_test(size_t size, unsigned int n, unsigned int l)
 	if (warmup)
 		do_warmup();
 
+	memset(&stats, 0, sizeof(stats));
 	while (n-- > 0) {
 		t = run_test_once(in_shm.buffer, size, &op, l);
 		update_stats(&stats, t);
