@@ -148,6 +148,8 @@ static const char *algo_str(uint32_t algo)
 	switch (algo) {
 	case TA_SHA_SHA1:
 		return "SHA1";
+	case TA_SHA_SHA256:
+		return "SHA256";
 	default:
 		return "???";
 	}
@@ -158,6 +160,8 @@ static int hash_size(uint32_t algo)
 	switch (algo) {
 	case TA_SHA_SHA1:
 		return 20;
+	case TA_SHA_SHA256:
+		return 32;
 	default:
 		return 0;
 	}
@@ -179,7 +183,7 @@ static void usage(const char *progname)
 	fprintf(stderr, "  -h    Print this help and exit\n");
 	fprintf(stderr, "  -l    Inner loop iterations (TA hashes ");
 	fprintf(stderr, "the buffer <x> times) [%u]\n", l);
-	fprintf(stderr, "  -a    Algorithm (currently SHA1 only) [%s]\n",
+	fprintf(stderr, "  -a    Algorithm (SHA1, SHA256) [%s]\n",
 			algo_str(algo));
 	fprintf(stderr, "  -n    Outer loop iterations [%u]\n", n);
 	fprintf(stderr, "  -r    Get input data from /dev/urandom ");
@@ -277,7 +281,7 @@ static uint64_t run_test_once(void *in, size_t size, TEEC_Operation *op,
 	return timespec_diff_ns(&t0, &t1);
 }
 
-static void prepare_key()
+static void prepare_op()
 {
 	TEEC_Result res;
 	uint32_t ret_origin;
@@ -286,7 +290,7 @@ static void prepare_key()
 	memset(&op, 0, sizeof(op));
 	op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INPUT, TEEC_NONE,
 					 TEEC_NONE, TEEC_NONE);
-	op.params[1].value.a = algo;
+	op.params[0].value.a = algo;
 	res = TEEC_InvokeCommand(&sess, TA_SHA_PERF_CMD_PREPARE_OP, &op,
 				 &ret_origin);
 	check_res(res, "TEEC_InvokeCommand");
@@ -391,6 +395,8 @@ int main(int argc, char *argv[])
 			NEXT_ARG(i);
 			if (!strcasecmp(argv[i], "SHA1"))
 				algo = TA_SHA_SHA1;
+			else if (!strcasecmp(argv[i], "SHA256"))
+				algo = TA_SHA_SHA256;
 			else {
 				fprintf(stderr, "%s, invalid algorithm\n",
 					argv[0]);
@@ -427,7 +433,7 @@ int main(int argc, char *argv[])
 		ts.tv_nsec);
 
 	open_ta();
-	prepare_key();
+	prepare_op();
 	run_test(size, n, l);
 
 	return 0;
