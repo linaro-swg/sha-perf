@@ -103,6 +103,7 @@ TEE_Result cmd_process(uint32_t param_types, TEE_Param params[4])
 	void *in, *out;
 	uint32_t insz;
 	uint32_t outsz;
+	uint32_t offset;
 	uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
 						   TEE_PARAM_TYPE_MEMREF_OUTPUT,
 						   TEE_PARAM_TYPE_VALUE_INPUT,
@@ -111,8 +112,9 @@ TEE_Result cmd_process(uint32_t param_types, TEE_Param params[4])
 	if (param_types != exp_param_types)
 		return TEE_ERROR_BAD_PARAMETERS;
 
-	in = params[0].memref.buffer;
-	insz = params[0].memref.size;
+	offset = params[2].value.b;
+	in = (uint8_t *)params[0].memref.buffer + offset;
+	insz = params[0].memref.size - offset;
 	out = params[1].memref.buffer;
 	outsz = params[1].memref.size;
 	n = params[2].value.a;

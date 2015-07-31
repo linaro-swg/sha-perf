@@ -61,6 +61,7 @@ static int verbosity = 0;	/* Verbosity (-v) */
 static int algo = TA_SHA_SHA1;	/* Algorithm (-a) */
 static int random_in = 0;	/* Get input data from /dev/urandom (-r) */
 static int warmup = 2;		/* Start with a 2-second busy loop (-w) */
+static int offset = 0;          /* Buffer offset wrt. alloc'ed address (-u) */
 
 /*
  * TEE client stuff
@@ -190,6 +191,7 @@ static void usage(const char *progname)
 	fprintf(stderr, "(otherwise use zero-filled buffer)\n");
 	fprintf(stderr, "  -s    Buffer size (process <x> bytes at a time) ");
 	fprintf(stderr, "[%zu]\n", size);
+	fprintf(stderr, "  -u    Use unaligned buffer (odd address)\n");
 	fprintf(stderr, "  -v    Be verbose (use twice for greater effect)\n");
 	fprintf(stderr, "  -w    Warm-up time in seconds: execute a busy ");
 	fprintf(stderr, "loop before the test\n");
@@ -202,7 +204,7 @@ static void alloc_shm(size_t sz, uint32_t algo)
 	TEEC_Result res;
 
 	in_shm.buffer = NULL;
-	in_shm.size = sz;
+	in_shm.size = sz + offset;
 	res = TEEC_AllocateSharedMemory(&ctx, &in_shm);
 	check_res(res, "TEEC_AllocateSharedMemory");
 
@@ -330,7 +332,7 @@ static void run_test(size_t size, unsigned int n, unsigned int l)
 	alloc_shm(size, algo);
 
 	if (!random_in)
-		memset(in_shm.buffer, 0, size);
+		memset((uint8_t *)in_shm.buffer + offset, 0, size);
 
 	memset(&op, 0, sizeof(op));
 	op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_PARTIAL_INPUT,
@@ -338,15 +340,17 @@ static void run_test(size_t size, unsigned int n, unsigned int l)
 					 TEEC_VALUE_INPUT, TEEC_NONE);
 	op.params[0].memref.parent = &in_shm;
 	op.params[0].memref.offset = 0;
-	op.params[0].memref.size = size;
+	op.params[0].memref.size = size + offset;
 	op.params[1].memref.parent = &out_shm;
 	op.params[1].memref.offset = 0;
 	op.params[1].memref.size = hash_size(algo);
 	op.params[2].value.a = l;
+	op.params[2].value.b = offset;
 
 	verbose("Starting test: %s, size=%zu bytes, ",
 		algo_str(algo), size);
 	verbose("random=%s, ", yesno(random_in));
+	verbose("unaligned=%s, ", yesno(offset));
 	verbose("inner loops=%u, loops=%u, warm-up=%u s\n", l, n, warmup);
 
 	if (warmup)
@@ -354,7 +358,7 @@ static void run_test(size_t size, unsigned int n, unsigned int l)
 
 	memset(&stats, 0, sizeof(stats));
 	while (n-- > 0) {
-		t = run_test_once(in_shm.buffer, size, &op, l);
+		t = run_test_once((uint8_t *)in_shm.buffer + offset, size, &op, l);
 		update_stats(&stats, t);
 		if (n % (n0/10) == 0)
 			vverbose("#");
@@ -411,6 +415,8 @@ int main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-s")) {
 			NEXT_ARG(i);
 			size = atoi(argv[i]);
+		} else if (!strcmp(argv[i], "-u")) {
+			offset = 1;
 		} else if (!strcmp(argv[i], "-v")) {
 			verbosity++;
 		} else if (!strcmp(argv[i], "-w")) {
