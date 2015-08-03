@@ -149,8 +149,14 @@ static const char *algo_str(uint32_t algo)
 	switch (algo) {
 	case TA_SHA_SHA1:
 		return "SHA1";
+	case TA_SHA_SHA224:
+		return "SHA224";
 	case TA_SHA_SHA256:
 		return "SHA256";
+	case TA_SHA_SHA384:
+		return "SHA384";
+	case TA_SHA_SHA512:
+		return "SHA512";
 	default:
 		return "???";
 	}
@@ -161,8 +167,14 @@ static int hash_size(uint32_t algo)
 	switch (algo) {
 	case TA_SHA_SHA1:
 		return 20;
+	case TA_SHA_SHA224:
+		return 28;
 	case TA_SHA_SHA256:
 		return 32;
+	case TA_SHA_SHA384:
+		return 48;
+	case TA_SHA_SHA512:
+		return 64;
 	default:
 		return 0;
 	}
@@ -184,8 +196,8 @@ static void usage(const char *progname)
 	fprintf(stderr, "  -h    Print this help and exit\n");
 	fprintf(stderr, "  -l    Inner loop iterations (TA hashes ");
 	fprintf(stderr, "the buffer <x> times) [%u]\n", l);
-	fprintf(stderr, "  -a    Algorithm (SHA1, SHA256) [%s]\n",
-			algo_str(algo));
+	fprintf(stderr, "  -a    Algorithm (SHA1, SHA224, SHA256, SHA384, ");
+	fprintf(stderr, "SHA512) [%s]\n", algo_str(algo));
 	fprintf(stderr, "  -n    Outer loop iterations [%u]\n", n);
 	fprintf(stderr, "  -r    Get input data from /dev/urandom ");
 	fprintf(stderr, "(otherwise use zero-filled buffer)\n");
@@ -399,8 +411,14 @@ int main(int argc, char *argv[])
 			NEXT_ARG(i);
 			if (!strcasecmp(argv[i], "SHA1"))
 				algo = TA_SHA_SHA1;
+			else if (!strcasecmp(argv[i], "SHA224"))
+				algo = TA_SHA_SHA224;
 			else if (!strcasecmp(argv[i], "SHA256"))
 				algo = TA_SHA_SHA256;
+			else if (!strcasecmp(argv[i], "SHA384"))
+				algo = TA_SHA_SHA384;
+			else if (!strcasecmp(argv[i], "SHA512"))
+				algo = TA_SHA_SHA512;
 			else {
 				fprintf(stderr, "%s, invalid algorithm\n",
 					argv[0]);

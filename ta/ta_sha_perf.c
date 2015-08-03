@@ -142,8 +142,17 @@ TEE_Result cmd_prepare_op(uint32_t param_types, TEE_Param params[4])
 	case TA_SHA_SHA1:
 		algo = TEE_ALG_SHA1;
 		break;
+	case TA_SHA_SHA224:
+		algo = TEE_ALG_SHA224;
+		break;
 	case TA_SHA_SHA256:
 		algo = TEE_ALG_SHA256;
+		break;
+	case TA_SHA_SHA384:
+		algo = TEE_ALG_SHA384;
+		break;
+	case TA_SHA_SHA512:
+		algo = TEE_ALG_SHA512;
 		break;
 	default:
 		return TEE_ERROR_BAD_PARAMETERS;

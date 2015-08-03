@@ -43,6 +43,9 @@
  */
 
 #define TA_SHA_SHA1	0
+#define TA_SHA_SHA224	1
 #define TA_SHA_SHA256	2
+#define TA_SHA_SHA384	3
+#define TA_SHA_SHA512	4
 
 #endif /* TA_SHA_PERF_H */
